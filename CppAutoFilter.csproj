@@ -45,6 +45,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="FiltersSettings.cs" />
     <Compile Include="MainToolWindow.cs" />
     <Compile Include="MainToolWindowCommand.cs" />
     <Compile Include="MainToolWindowControl.xaml.cs">

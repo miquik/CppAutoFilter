@@ -207,5 +207,10 @@ namespace CppAutoFilter
             return relativeUri.ToString().Replace("/", "\\");
 
         }
+
+        private void Reparse(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
