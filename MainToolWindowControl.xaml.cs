@@ -67,7 +67,7 @@ namespace CppAutoFilter
                 XElement extElem = filterDoc.Root.Descendants(sn + "CppAutoFilter").FirstOrDefault();
                 if (extElem != null)
                 {
-                    tbStructure.Text = extElem.Element(sn + "BaseFilterName").Value ?? "structure";
+                    // tbStructure.Text = extElem.Element(sn + "BaseFilterName").Value ?? "structure";
                     cbSubfolder.IsChecked = extElem.Element(sn + "LookSubfolder").Value == "true" ? true : false;
                     var list = extElem.Descendants(sn + "Folder").ToList();
                 } else
@@ -151,20 +151,20 @@ namespace CppAutoFilter
                 // Remove all existing filter if any
                 doc.Root
                     .Descendants(sn + "Filter")
-                    .Where(x => ContainsFilter((string)x.Attribute("Include") ?? null, tbStructure.Text))
+                    .Where(x => ContainsFilter((string)x.Attribute("Include") ?? null, "")) // tbStructure.Text))
                     .Remove();
 
                 // remove all ClInclude if belongs to this filter
                 var clincludes = doc.Root
                     .Descendants(sn + "ClInclude")
-                    .Where(x => x.Element(sn + "Filter") != null && 
-                        ContainsFilter(x.Element(sn + "Filter").Value, tbStructure.Text));
+                    .Where(x => x.Element(sn + "Filter") != null &&
+                        ContainsFilter(x.Element(sn + "Filter").Value, "")); // tbStructure.Text));
                 clincludes.Remove();
 
                 var clcompiles = doc.Root
                     .Descendants(sn + "ClCompile")
                     .Where(x => x.Element(sn + "Filter") != null &&
-                        ContainsFilter(x.Element(sn + "Filter").Value, tbStructure.Text));
+                        ContainsFilter(x.Element(sn + "Filter").Value, "")); // tbStructure.Text); );
                 clcompiles.Remove();
             }
             catch (System.Exception)

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CppAutoFilter
 {
-    public class FiltersItem : INotifyPropertyChanged
+    public class FiltersItem : ObservableBase
     {
         private string _filterName;
         private string _fullPath;
@@ -32,20 +32,10 @@ namespace CppAutoFilter
                 NotifyPropertyChanged();
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        // This method is called by the Set accessor of each property.  
-        // The CallerMemberName attribute that is applied to the optional propertyName  
-        // parameter causes the property name of the caller to be substituted as an argument.  
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 
 
-    public class FiltersSettings : INotifyPropertyChanged
+    public class FiltersSettings : ObservableBase
     {
         private bool _scanSubFolder;
         private ObservableCollection<FiltersItem> _filters;
@@ -74,17 +64,6 @@ namespace CppAutoFilter
                 _filters = value;
                 NotifyPropertyChanged();
             }
-        }
-
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        // This method is called by the Set accessor of each property.  
-        // The CallerMemberName attribute that is applied to the optional propertyName  
-        // parameter causes the property name of the caller to be substituted as an argument.  
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

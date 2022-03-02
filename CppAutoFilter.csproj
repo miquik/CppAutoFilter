@@ -46,11 +46,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FiltersSettings.cs" />
+    <Compile Include="FilterWindow.xaml.cs">
+      <DependentUpon>FilterWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainToolWindow.cs" />
     <Compile Include="MainToolWindowCommand.cs" />
     <Compile Include="MainToolWindowControl.xaml.cs">
       <DependentUpon>MainToolWindowControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ObservableBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CppAutoFilterPackage.cs" />
   </ItemGroup>
@@ -76,6 +80,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.31902.203" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5233" />
+    <PackageReference Include="Ookii.Dialogs.Wpf">
+      <Version>5.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="CppAutoFilterPackage.vsct">
@@ -87,6 +94,10 @@
     <Content Include="Resources\MainToolWindowCommand.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="FilterWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainToolWindowControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
