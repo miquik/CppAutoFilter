@@ -30,6 +30,8 @@ namespace CppAutoFilter
         public string FolderPath { get; set; }
         public string FilterName { get; set; }
 
+        public string Extensions { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void Browse(object sender, RoutedEventArgs e)
@@ -48,6 +50,16 @@ namespace CppAutoFilter
         protected void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void Accept(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Cancel(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="600"
              Name="MyToolWindow">
-    <Grid Background="WhiteSmoke">
+    <Grid DataContext="{Binding FiltersSettings, ElementName=MyToolWindow}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100" />
             <ColumnDefinition Width="*"/>
@@ -20,7 +20,7 @@
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Content="Include subfolder:" VerticalAlignment="Center"/>
-        <CheckBox x:Name="cbSubfolder" Grid.Row="0" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"/>
+        <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding ScanSubFolder}" VerticalAlignment="Center"/>
         <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0, 10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="35"/>
@@ -31,9 +31,18 @@
                 <!--<Button Content="Edit" Width="80" Margin="5" Click="EditButton_Click"/>-->
                 <Button Content="Remove" Width="80" Margin="5" Click="DelButton_Click"/>
             </StackPanel>
-            <ListBox x:Name="lbFolders" Grid.Row="1" Margin="5, 0">
-                
-            </ListBox>
+            <ListView Grid.Row="1" 
+                     Margin="5, 0"
+                     SelectionChanged="ListView_SelectionChanged"
+                     ItemsSource="{Binding Filters}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Path" Width="200" DisplayMemberBinding="{Binding FullPath}" />
+                        <GridViewColumn Header="Filter Name" Width="200" DisplayMemberBinding="{Binding FilterName}" />
+                        <GridViewColumn Header="Extensions" Width="200" DisplayMemberBinding="{Binding Extensions}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </Grid>
         <StackPanel Grid.Row="3" Grid.Column="1" 
                     HorizontalAlignment="Right"

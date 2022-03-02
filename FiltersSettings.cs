@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace CppAutoFilter
 {
@@ -13,8 +15,9 @@ namespace CppAutoFilter
     {
         private string _filterName;
         private string _fullPath;
+        private string _extensions;
 
-        string FilterName 
+        public string FilterName 
         {
             get => _filterName;
             set
@@ -23,7 +26,7 @@ namespace CppAutoFilter
                 NotifyPropertyChanged();
             }
         }
-        string FullPath
+        public string FullPath
         {
             get => _fullPath;
             set
@@ -31,6 +34,24 @@ namespace CppAutoFilter
                 _fullPath = value;
                 NotifyPropertyChanged();
             }
+        }
+
+        public string Extensions
+        {
+            get => _extensions;
+            set
+            {
+                _extensions = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public XElement Serialize()
+        {
+            return new XElement("Folder",
+                    new XAttribute("FilterName", FilterName),
+                    new XAttribute("Path", FullPath),
+                    new XAttribute("Extensions", Extensions));
         }
     }
 
@@ -64,6 +85,13 @@ namespace CppAutoFilter
                 _filters = value;
                 NotifyPropertyChanged();
             }
+        }
+
+        public XElement Serialize()
+        {
+            return new XElement("CppAutoFilter",
+                    new XElement("LookSubfolder", ScanSubFolder),
+                    new XElement("Folders", Filters.Select<FiltersItem, XElement>(x => x.Serialize())));
         }
     }
 }

@@ -6,6 +6,9 @@
              xmlns:local="clr-namespace:CppAutoFilter"
              x:Name="fw"
              mc:Ignorable="d" d:DesignWidth="800">
+    <Window.Resources>
+        <local:RadioButtonCheckedConverter x:Key="rbcc"/>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
@@ -15,6 +18,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="40"/>
+            <RowDefinition Height="120"/>
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Label Content="Folder path:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
@@ -22,7 +26,26 @@
         <Button Grid.Column="2" Content="Browse..." Margin="5" Click="Browse"/>
         <Label Grid.Row="1" Content="Filter name:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
         <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Path=FilterName, ElementName=fw}" Margin="5" VerticalContentAlignment="Center"/>
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" 
+        <Label Grid.Row="2" Content="Extensions:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
+            <RadioButton Content="All files" 
+                         IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                            Converter={StaticResource rbcc}, 
+                            ConverterParameter=%%all%%}"/>
+            <RadioButton Content="Source files"
+                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                            Converter={StaticResource rbcc}, 
+                            ConverterParameter=%%sources%%}"/>
+            <RadioButton Content="Include files"
+                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                            Converter={StaticResource rbcc}, 
+                            ConverterParameter=%%includes%%}"/>
+            <RadioButton Content="Custom extension"
+                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                            Converter={StaticResource rbcc}}"/>
+            <TextBox Text="{Binding Path=Extensions, ElementName=fw}" Margin="0,5" VerticalContentAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" 
                     HorizontalAlignment="Right"
                     Margin="0, 5"
                     Orientation="Horizontal">

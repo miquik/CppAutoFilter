@@ -20,6 +20,8 @@ namespace CppAutoFilter
         private string filterFullPath;
         private XDocument filterDoc;
         private XNamespace sn = "http://schemas.microsoft.com/developer/msbuild/2003";
+        private FiltersSettings filtersSettings;
+        private FiltersItem selectedItem = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainToolWindowControl"/> class.
@@ -30,19 +32,36 @@ namespace CppAutoFilter
         }
 
         public EnvDTE.Project Project { get; set; }
+        public FiltersSettings FiltersSettings { get => filtersSettings; set => filtersSettings = value; }
+        public FiltersItem SelectedItem { get => selectedItem; set => selectedItem = value; }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-        }
+            if (SelectedItem == null)
+            {
+                return;
+            }
 
-        private void EditButton_Click(object sender, RoutedEventArgs e)
-        {
-
+            FilterWindow fw = new FilterWindow();
+            fw.FilterName = SelectedItem.FilterName;
+            fw.FolderPath = SelectedItem.FullPath;
+            fw.Extensions = SelectedItem.Extensions;
+            if (fw.ShowDialog() == true)
+            {
+                SelectedItem.FilterName = fw.FilterName;
+                SelectedItem.FullPath = fw.FolderPath;
+                SelectedItem.Extensions = fw.Extensions;
+            }
         }
 
         private void DelButton_Click(object sender, RoutedEventArgs e)
         {
-
+            if (SelectedItem == null)
+            {
+                return;
+            }
+            FiltersSettings.Filters.Remove(SelectedItem);
+            SelectedItem = null;
         }
 
         internal void UpdateProjectInfo(Project project)
@@ -70,7 +89,8 @@ namespace CppAutoFilter
                     // tbStructure.Text = extElem.Element(sn + "BaseFilterName").Value ?? "structure";
                     cbSubfolder.IsChecked = extElem.Element(sn + "LookSubfolder").Value == "true" ? true : false;
                     var list = extElem.Descendants(sn + "Folder").ToList();
-                } else
+                }
+                else
                 {
                     // create
                 }
@@ -147,7 +167,7 @@ namespace CppAutoFilter
             {
                 XNamespace sn = "http://schemas.microsoft.com/developer/msbuild/2003";
                 XDocument doc = XDocument.Load(filterFile);
-                
+
                 // Remove all existing filter if any
                 doc.Root
                     .Descendants(sn + "Filter")
@@ -211,6 +231,11 @@ namespace CppAutoFilter
         private void Reparse(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SelectedItem = (FiltersItem)((ListView)sender).SelectedItem;
         }
     }
 }
