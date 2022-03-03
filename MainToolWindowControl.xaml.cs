@@ -19,9 +19,9 @@ namespace CppAutoFilter
         private Project thisProject;
         private string filterFullPath;
         private XDocument filterDoc;
-        private XNamespace sn = "http://schemas.microsoft.com/developer/msbuild/2003";
-        private FiltersSettings filtersSettings;
-        private FiltersItem selectedItem = null;
+        
+        private FiltersVM filtersSettings;
+        private FilterItemVM selectedItem = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainToolWindowControl"/> class.
@@ -32,8 +32,8 @@ namespace CppAutoFilter
         }
 
         public EnvDTE.Project Project { get; set; }
-        public FiltersSettings FiltersSettings { get => filtersSettings; set => filtersSettings = value; }
-        public FiltersItem SelectedItem { get => selectedItem; set => selectedItem = value; }
+        public FiltersVM FiltersSettings { get => filtersSettings; set => filtersSettings = value; }
+        public FilterItemVM SelectedItem { get => selectedItem; set => selectedItem = value; }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
@@ -43,13 +43,13 @@ namespace CppAutoFilter
             }
 
             FilterWindow fw = new FilterWindow();
-            fw.FilterName = SelectedItem.FilterName;
-            fw.FolderPath = SelectedItem.FullPath;
+            fw.FilterName = SelectedItem.Name;
+            fw.FolderPath = SelectedItem.FolderPath;
             fw.Extensions = SelectedItem.Extensions;
             if (fw.ShowDialog() == true)
             {
-                SelectedItem.FilterName = fw.FilterName;
-                SelectedItem.FullPath = fw.FolderPath;
+                SelectedItem.Name = fw.FilterName;
+                SelectedItem.FolderPath = fw.FolderPath;
                 SelectedItem.Extensions = fw.Extensions;
             }
         }
@@ -235,7 +235,7 @@ namespace CppAutoFilter
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SelectedItem = (FiltersItem)((ListView)sender).SelectedItem;
+            SelectedItem = (FilterItemVM)((ListView)sender).SelectedItem;
         }
     }
 }
