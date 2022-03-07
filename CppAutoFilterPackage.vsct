@@ -66,7 +66,7 @@
         <Parent guid="guidCppAutoFilterPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages1" id="bmpPic1" />
         <Strings>
-          <ButtonText>MainToolWindow</ButtonText>
+          <ButtonText>CppAutoFilter</ButtonText>
         </Strings>
       </Button>
     </Buttons>

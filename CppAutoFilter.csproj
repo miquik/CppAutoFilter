@@ -50,10 +50,9 @@
     <Compile Include="FilterWindow.xaml.cs">
       <DependentUpon>FilterWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainToolWindow.cs" />
-    <Compile Include="MainToolWindowCommand.cs" />
-    <Compile Include="MainToolWindowControl.xaml.cs">
-      <DependentUpon>MainToolWindowControl.xaml</DependentUpon>
+    <Compile Include="MainWindowCommand.cs" />
+    <Compile Include="MainWindowControl.xaml.cs">
+      <DependentUpon>MainWindowControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ObservableBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -104,9 +103,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainToolWindowControl.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="MainWindowControl.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -30,7 +30,7 @@ namespace CppAutoFilter
                 return true;
             }
 
-            if (String.IsNullOrEmpty(rb))
+            if (String.IsNullOrEmpty(rb) && !valueStr.StartsWith("%%"))
             {
                 return true;
             }

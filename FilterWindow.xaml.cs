@@ -27,14 +27,27 @@ namespace CppAutoFilter
         private string _extensions;
         private string _projFullPath;
         private string _extensionsTemp;
+        private FilterItemVM _filterItemVM;
 
         public FilterWindow(string projFullPath)
         {
             InitializeComponent();
             _projFullPath = projFullPath;
-            Extensions = Consts.FilterAllFiles;
+            FilterItem = (FilterItemVM)DataContext;
+            // Extensions = Consts.FilterAllFiles;
         }
 
+        public FilterItemVM FilterItem
+        {
+            get => _filterItemVM;
+            set
+            {
+                _filterItemVM = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        /*
         public string FilterName
         {
             get => _filterName;
@@ -63,6 +76,7 @@ namespace CppAutoFilter
                 NotifyPropertyChanged();
             }
         }
+        */
         private string ExtensionsTemp
         {
             get => _extensionsTemp;
@@ -83,11 +97,11 @@ namespace CppAutoFilter
 
             if ((bool)dialog.ShowDialog(this))
             {
-                FolderPath = dialog.SelectedPath;
-                string relpath = GetRelativePath(FolderPath, System.IO.Path.GetDirectoryName(_projFullPath));
+                FilterItem.FolderPath = dialog.SelectedPath;
+                string relpath = GetRelativePath(FilterItem.FolderPath, System.IO.Path.GetDirectoryName(_projFullPath));
                 relpath = relpath.Replace("..\\", "dd\\");
-                relpath = relpath.Replace(System.IO.Path.GetPathRoot(FolderPath), "");
-                FilterName = relpath;
+                relpath = relpath.Replace(System.IO.Path.GetPathRoot(FilterItem.FolderPath), "");
+                FilterItem.Name = relpath;
             }
         }
 
@@ -101,7 +115,7 @@ namespace CppAutoFilter
             DialogResult = true;
             if (rbCustom.IsChecked == true)
             {
-                Extensions = ExtensionsTemp;
+                FilterItem.Extensions = ExtensionsTemp;
             }
             Close();
         }

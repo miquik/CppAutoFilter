@@ -26,7 +26,7 @@ namespace CppAutoFilter
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(CppAutoFilterPackage.PackageGuidString)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(MainToolWindow))]
+    // [ProvideToolWindow(typeof(MainWindowC))]
     public sealed class CppAutoFilterPackage : AsyncPackage
     {
         /// <summary>
@@ -49,7 +49,7 @@ namespace CppAutoFilter
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             // await ExampleCommand.InitializeAsync(this);
-            await MainToolWindowCommand.InitializeAsync(this);
+            await MainWindowCommand.InitializeAsync(this);
         }
 
         #endregion

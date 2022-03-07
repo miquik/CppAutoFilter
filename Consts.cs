@@ -10,6 +10,7 @@ namespace CppAutoFilter
     internal class Consts
     {
         public static XNamespace SN = "http://schemas.microsoft.com/developer/msbuild/2003";
+        public static XNamespace NoneSN = "";
 
         public static string FilterAllFiles = "%%all%%";
         public static string FilterSourceFiles = "%%sources%%";

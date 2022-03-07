@@ -9,6 +9,9 @@
     <Window.Resources>
         <local:RadioButtonCheckedConverter x:Key="rbcc"/>
     </Window.Resources>
+    <Window.DataContext>
+        <local:FilterItemVM/>
+    </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="150"/>
@@ -22,32 +25,32 @@
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Label Content="Folder path:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-        <TextBox Grid.Column="1" Text="{Binding Path=FolderPath, ElementName=fw}" Margin="5" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Column="1" Text="{Binding FolderPath}" Margin="5" VerticalContentAlignment="Center"/>
         <Button Grid.Column="2" Content="Browse..." Margin="5" Click="Browse"/>
         <Label Grid.Row="1" Content="Filter name:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Path=FilterName, ElementName=fw}" Margin="5" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" Margin="5" VerticalContentAlignment="Center"/>
         <Label Grid.Row="2" Content="Extensions:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
         <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
             <!--<Label Content="{x:Static local:StringConstants.MyString}"/>-->
             
             <RadioButton Content="All files" 
-                         IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                         IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
                             ConverterParameter={x:Static local:Consts.FilterAllFiles}}"/>
             <RadioButton Content="Source files"
-                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                          IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
                             ConverterParameter={x:Static local:Consts.FilterSourceFiles}}"/>
             <RadioButton Content="Include files"
-                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                          IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
                             ConverterParameter={x:Static local:Consts.FilterIncludeFiles}}"/>
             <RadioButton Content="Resource files"
-                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                          IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
                             ConverterParameter={x:Static local:Consts.FilterResFiles}}"/>
             <RadioButton x:Name="rbCustom" Content="Custom extension"
-                          IsChecked="{Binding Path=Extensions, ElementName=fw, 
+                          IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}}"/>
             <TextBox Text="{Binding Path=ExtensionsTemp, ElementName=fw}" Margin="0,5" VerticalContentAlignment="Center" IsEnabled="{Binding Path=IsChecked, ElementName=rbCustom}"/>
         </StackPanel>
