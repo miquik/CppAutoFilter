@@ -72,8 +72,8 @@ namespace CppAutoFilter
                 return null;
             }
 
-            string fExtension = (fExt != null && String.IsNullOrEmpty(fExt.Value) == false) ? fExt.Value : "%%all%%";
-            string fGuid = (fGd != null && String.IsNullOrEmpty(fGd.Value) == false) ? fGd.Value : System.Guid.NewGuid().ToString("N");
+            string fExtension = (fExt != null && String.IsNullOrEmpty(fExt.Value) == false) ? fExt.Value : Consts.FilterAllFiles;
+            string fGuid = (fGd != null && String.IsNullOrEmpty(fGd.Value) == false) ? fGd.Value : System.Guid.NewGuid().ToString().ToUpper();
 
             FilterItemVM filterItemVM = new FilterItemVM();
             filterItemVM.Name = fName.Value;
@@ -92,7 +92,7 @@ namespace CppAutoFilter
 
         public FiltersVM()
         {
-            _scanSubFolder = false;
+            _scanSubFolder = true;
             _filters = new ObservableCollection<FilterItemVM>();
         }
 

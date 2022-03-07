@@ -32,6 +32,7 @@ namespace CppAutoFilter
         {
             InitializeComponent();
             _projFullPath = projFullPath;
+            Extensions = Consts.FilterAllFiles;
         }
 
         public string FilterName
