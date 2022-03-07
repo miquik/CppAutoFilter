@@ -19,7 +19,7 @@ namespace CppAutoFilter
         private Project thisProject;
         private string filterFullPath;
         private XDocument filterDoc;
-        
+
         private FiltersVM filtersSettings;
         private FilterItemVM selectedItem = null;
 
@@ -29,28 +29,27 @@ namespace CppAutoFilter
         public MainToolWindowControl()
         {
             this.InitializeComponent();
+            FiltersSettings = new FiltersVM();
         }
 
-        public EnvDTE.Project Project { get; set; }
         public FiltersVM FiltersSettings { get => filtersSettings; set => filtersSettings = value; }
         public FilterItemVM SelectedItem { get => selectedItem; set => selectedItem = value; }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedItem == null)
-            {
-                return;
-            }
+            ThreadHelper.ThrowIfNotOnUIThread();
 
-            FilterWindow fw = new FilterWindow();
-            fw.FilterName = SelectedItem.Name;
-            fw.FolderPath = SelectedItem.FolderPath;
-            fw.Extensions = SelectedItem.Extensions;
+            // Guid.NewGuid().ToString("N")
+            FilterWindow fw = new FilterWindow(thisProject.FileName);
             if (fw.ShowDialog() == true)
             {
-                SelectedItem.Name = fw.FilterName;
-                SelectedItem.FolderPath = fw.FolderPath;
-                SelectedItem.Extensions = fw.Extensions;
+                FiltersSettings.Filters.Add(new FilterItemVM()
+                {
+                    Name = fw.FilterName,
+                    FolderPath = fw.FolderPath,
+                    Extensions = fw.Extensions,
+                    Guid = Guid.NewGuid().ToString("N")
+                });
             }
         }
 
@@ -77,26 +76,20 @@ namespace CppAutoFilter
             {
                 throw new IOException("Filter file not found");
             }
-
-            // 
+            // try parse existing settings
             try
             {
                 filterDoc = XDocument.Load(filterFullPath);
                 // parse CppAutoFilter element or create if not found
-                XElement extElem = filterDoc.Root.Descendants(sn + "CppAutoFilter").FirstOrDefault();
+                XElement extElem = filterDoc.Root.Descendants(Consts.SN + "CppAutoFilter").FirstOrDefault();
                 if (extElem != null)
                 {
-                    // tbStructure.Text = extElem.Element(sn + "BaseFilterName").Value ?? "structure";
-                    cbSubfolder.IsChecked = extElem.Element(sn + "LookSubfolder").Value == "true" ? true : false;
-                    var list = extElem.Descendants(sn + "Folder").ToList();
-                }
-                else
-                {
-                    // create
+                    FiltersSettings = FiltersVM.Deserialize(extElem);
                 }
             }
             catch (Exception)
             {
+                filterDoc = null;
                 throw new IOException("Invalid filter file");
             }
         }
@@ -137,6 +130,7 @@ namespace CppAutoFilter
 </Project>
         */
 
+        /*
         private static bool ContainsFilter(string attr, string text)
         {
             if (attr == null)
@@ -153,10 +147,178 @@ namespace CppAutoFilter
             }
             return false;
         }
+        */
+
+        private XElement GetOrCreateImportGroup(string childType, bool createIfNotFound = true)
+        {
+            /*
+            <ItemGroup>
+                <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+                  <Filter>provaf\ev</Filter>
+                </ClCompile>
+            */
+            XElement groupElem = filterDoc.Root
+                .Elements(Consts.SN + "ItemGroup")
+                .Where(x => x.Element(Consts.SN + childType) != null)
+                .FirstOrDefault();
+
+            if (groupElem != null)
+            {
+                return groupElem;
+            }
+            if (createIfNotFound)
+            {
+                groupElem = new XElement(Consts.SN + "ItemGroup");
+                filterDoc.Root.Add(groupElem);
+                return groupElem;
+            }
+            return null;
+        }
+
+
+        private static string GetExtension(string fileName)
+        {
+            return Path.GetExtension(fileName).Replace(".", "") + ";";
+        }
+
+        private static bool ExtSearchPattern(string fileName, string extArray)
+        {
+            if (extArray == Consts.FilterAllFiles)
+            {
+                return true;
+            }
+
+            string compareArray = extArray;
+            if (extArray == Consts.FilterIncludeFiles)
+            {
+                compareArray = Consts.IncludeExt;
+            }
+            else if (extArray == Consts.FilterSourceFiles)
+            {
+                compareArray = Consts.SourceExt;
+            }
+            else if (extArray == Consts.FilterResFiles)
+            {
+                compareArray = Consts.ResourceExt;
+            }
+
+            string ext = GetExtension(fileName);
+            return compareArray.Contains(ext);
+        }
 
         private void Generate(object sender, RoutedEventArgs e)
         {
-            string filterFile = Project.FullName + ".filters";
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (filterDoc == null)
+            {
+                MessageBox.Show("There are some error parsing .filters file");
+                return;
+            }
+
+            // check if CppAutoFilter extension settings are present, if not let's create it            
+            bool isNew = false;
+            XElement extElem = filterDoc.Root.Element(Consts.SN + "ProjectExtensions");
+            XElement cafElem = filterDoc.Root.Descendants(Consts.SN + "CppAutoFilter").FirstOrDefault();
+            if (cafElem == null)
+            {
+                // exist "ProjectExtensions" session?                
+                if (extElem == null)
+                {
+                    extElem = new XElement(Consts.SN + "ProjectExtensions");
+                    filterDoc.Root.Add(extElem);
+                }
+                cafElem = FiltersVM.CreateEmptySession();
+                extElem.Add(cafElem);
+                isNew = true;
+            }
+
+            if (isNew == false)
+            {
+                // session already exist, so let's propagate new changes
+                // changes can be: new items added OR some items removed
+                // 1. some items are removed
+                // FiltersSettings.Filters.
+
+                // This can be addressed using the following LINQ expression:
+                // var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
+                // An alternate way of expressing this via LINQ, which some developers find more readable:
+                // var result = peopleList2.Where(p => peopleList1.All(p2 => p2.ID != p.ID));
+                var ss = cafElem.Descendants(Consts.SN + "Filter").Select(x => x.Attribute(Consts.SN + "Guid").Value);
+            }
+
+            // create filters and parse file
+            XElement groupElem = GetOrCreateImportGroup("Filter", false);
+            /*
+            filterDoc.Root
+                .Elements(Consts.SN + "ItemGroup")
+                .Where(x => x.Element(Consts.SN + "Filter") != null)
+                .FirstOrDefault();
+            */
+            if (groupElem == null)
+            {
+                // ?
+                throw new Exception("Malformed filters file");
+            }
+
+
+            // Add elements
+            XElement includeElem = GetOrCreateImportGroup("ClInclude");
+            XElement compileElem = GetOrCreateImportGroup("ClCompile");
+            XElement otherElem = GetOrCreateImportGroup("None");
+
+            // Process
+            foreach (var fi in FiltersSettings.Filters)
+            {
+                /*
+                <Filter Include="provaf">
+                    <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
+                </Filter>
+                */
+                // 1. Add Filter
+                groupElem.Add(new XElement(Consts.SN + "Filter",
+                    new XAttribute(Consts.SN + "Include", fi.Name),
+                    new XElement(Consts.SN + "UniqueIdentifier", "{" + fi.Guid.ToLower() + "}")));
+
+                // 2. Scan selected folder
+                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                foreach (var file in Directory
+                    .EnumerateFiles(fi.FolderPath, "*", soption)
+                    .Where(file => ExtSearchPattern(file, fi.Extensions)))
+                {
+                    // now add path to right filter
+                    string ext = GetExtension(file);
+                    if (Consts.IncludeExt.Contains(ext))
+                    {
+                        /*
+                        <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+                            <Filter>provaf\ev</Filter>
+                        </ClCompile>
+                         */
+                        includeElem.Add(new XElement(Consts.SN + "ClInclude",
+                            new XAttribute(Consts.SN + "Include", file),
+                            new XElement(Consts.SN + "Filter", fi.Name)));
+
+                    } else if (Consts.SourceExt.Contains(ext))
+                    {
+                        compileElem.Add(new XElement(Consts.SN + "ClCompile",
+                            new XAttribute(Consts.SN + "Include", file),
+                            new XElement(Consts.SN + "Filter", fi.Name)));
+                    } else
+                    {
+                        otherElem.Add(new XElement(Consts.SN + "None",
+                            new XAttribute(Consts.SN + "Include", file),
+                            new XElement(Consts.SN + "Filter", fi.Name)));
+                    }
+                }
+            }
+
+
+            // Write new settings
+            cafElem.ReplaceWith(FiltersSettings.Serialize());
+
+            /*
+            string filterFile = thisProject.FullName + ".filters";
             bool exist = System.IO.File.Exists(filterFile);
             if (exist == false)
             {
@@ -167,7 +329,7 @@ namespace CppAutoFilter
             {
                 XNamespace sn = "http://schemas.microsoft.com/developer/msbuild/2003";
                 XDocument doc = XDocument.Load(filterFile);
-
+                
                 // Remove all existing filter if any
                 doc.Root
                     .Descendants(sn + "Filter")
@@ -191,40 +353,12 @@ namespace CppAutoFilter
             {
                 throw new IOException("Impossibile aprire il file di filtro");
             }
-
+            */
             // vcxproj;
         }
 
         private void Exit(object sender, RoutedEventArgs e)
         {
-
-        }
-
-        /// <summary>
-        /// Returns a relative path string from a full path based on a base path
-        /// provided.
-        /// </summary>
-        /// <param name="fullPath">The path to convert. Can be either a file or a directory</param>
-        /// <param name="basePath">The base path on which relative processing is based. Should be a directory.</param>
-        /// <returns>
-        /// String of the relative path.
-        /// 
-        /// Examples of returned values:
-        ///  test.txt, ..\test.txt, ..\..\..\test.txt, ., .., subdir\test.txt
-        /// </returns>
-        public static string GetRelativePath(string fullPath, string basePath)
-        {
-            // Require trailing backslash for path
-            if (!basePath.EndsWith("\\"))
-                basePath += "\\";
-
-            Uri baseUri = new Uri(basePath);
-            Uri fullUri = new Uri(fullPath);
-
-            Uri relativeUri = baseUri.MakeRelativeUri(fullUri);
-
-            // Uri's use forward slashes so convert back to backward slashes
-            return relativeUri.ToString().Replace("/", "\\");
 
         }
 

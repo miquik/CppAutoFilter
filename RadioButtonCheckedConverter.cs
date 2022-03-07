@@ -41,7 +41,15 @@ namespace CppAutoFilter
         public object ConvertBack(object value, Type targetType, object parameter,
             System.Globalization.CultureInfo culture)
         {
-            throw new NotImplementedException();
+            bool rb = (bool)value;
+            if (rb)
+            {
+                if (parameter != null)
+                {
+                    return (string)parameter;
+                }
+            }
+            return Binding.DoNothing; // throw new NotImplementedException();
         }
     }
 }

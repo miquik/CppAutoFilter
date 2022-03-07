@@ -4,11 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vsshell="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
-             Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
-             Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+             Background="WhiteSmoke"
+             Foreground="Black"
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="600"
              Name="MyToolWindow">
+
+    <!--
+    Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
+    Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+    -->
     <Grid DataContext="{Binding FiltersSettings, ElementName=MyToolWindow}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100" />
@@ -37,8 +42,8 @@
                      ItemsSource="{Binding Filters}">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Path" Width="200" DisplayMemberBinding="{Binding FullPath}" />
-                        <GridViewColumn Header="Filter Name" Width="200" DisplayMemberBinding="{Binding FilterName}" />
+                        <GridViewColumn Header="Path" Width="200" DisplayMemberBinding="{Binding FolderPath}" />
+                        <GridViewColumn Header="Filter Name" Width="200" DisplayMemberBinding="{Binding Name}" />
                         <GridViewColumn Header="Extensions" Width="200" DisplayMemberBinding="{Binding Extensions}" />
                     </GridView>
                 </ListView.View>
@@ -48,9 +53,9 @@
                     HorizontalAlignment="Right"
                     Margin="5"
                     Orientation="Horizontal">
-            <Button Content="Reparse" Width="100" Margin="5, 0" Click="Reparse"/>
+            <!--<Button Content="Reparse" Width="100" Margin="5, 0" Click="Reparse"/>-->
             <Button Content="Generate" Width="100" Margin="5, 0" Click="Generate"/>
-            <Button Content="Exit" Width="100" Margin="5, 0" Click="Exit"/>
+            <!--<Button Content="Exit" Width="100" Margin="5, 0" Click="Exit"/>-->
         </StackPanel>
     </Grid>
 </UserControl>

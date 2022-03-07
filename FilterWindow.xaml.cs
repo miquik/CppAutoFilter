@@ -21,16 +21,56 @@ namespace CppAutoFilter
     /// Logica di interazione per FilterWindow.xaml
     /// </summary>
     public partial class FilterWindow : Window, INotifyPropertyChanged
-    {        
-        public FilterWindow()
+    {
+        private string _filterName;
+        private string _fullPath;
+        private string _extensions;
+        private string _projFullPath;
+        private string _extensionsTemp;
+
+        public FilterWindow(string projFullPath)
         {
             InitializeComponent();
+            _projFullPath = projFullPath;
         }
 
-        public string FolderPath { get; set; }
-        public string FilterName { get; set; }
+        public string FilterName
+        {
+            get => _filterName;
+            set
+            {
+                _filterName = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public string FolderPath
+        {
+            get => _fullPath;
+            set
+            {
+                _fullPath = value;
+                NotifyPropertyChanged();
+            }
+        }
 
-        public string Extensions { get; set; }
+        public string Extensions
+        {
+            get => _extensions;
+            set
+            {
+                _extensions = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private string ExtensionsTemp
+        {
+            get => _extensionsTemp;
+            set
+            {
+                _extensionsTemp = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -43,7 +83,10 @@ namespace CppAutoFilter
             if ((bool)dialog.ShowDialog(this))
             {
                 FolderPath = dialog.SelectedPath;
-                // TODO: suggest filter name
+                string relpath = GetRelativePath(FolderPath, System.IO.Path.GetDirectoryName(_projFullPath));
+                relpath = relpath.Replace("..\\", "dd\\");
+                relpath = relpath.Replace(System.IO.Path.GetPathRoot(FolderPath), "");
+                FilterName = relpath;
             }
         }
 
@@ -54,12 +97,46 @@ namespace CppAutoFilter
 
         private void Accept(object sender, RoutedEventArgs e)
         {
-
+            DialogResult = true;
+            if (rbCustom.IsChecked == true)
+            {
+                Extensions = ExtensionsTemp;
+            }
+            Close();
         }
 
         private void Cancel(object sender, RoutedEventArgs e)
         {
+            DialogResult = false;
             Close();
+        }
+
+        /// <summary>
+        /// Returns a relative path string from a full path based on a base path
+        /// provided.
+        /// </summary>
+        /// <param name="fullPath">The path to convert. Can be either a file or a directory</param>
+        /// <param name="basePath">The base path on which relative processing is based. Should be a directory.</param>
+        /// <returns>
+        /// String of the relative path.
+        /// 
+        /// Examples of returned values:
+        ///  test.txt, ..\test.txt, ..\..\..\test.txt, ., .., subdir\test.txt
+        /// </returns>
+        public string GetRelativePath(string fullPath, string basePath)
+        {
+            // Require trailing backslash for path
+            if (!basePath.EndsWith("\\"))
+                basePath += "\\";
+
+            Uri baseUri = new Uri(basePath);
+            Uri fullUri = new Uri(fullPath);
+
+            Uri relativeUri = baseUri.MakeRelativeUri(fullUri);
+
+            // Uri's use forward slashes so convert back to backward slashes
+            return relativeUri.ToString().Replace("/", "\\");
+
         }
     }
 }

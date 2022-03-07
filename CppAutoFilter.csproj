@@ -45,6 +45,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Consts.cs" />
     <Compile Include="FiltersVM.cs" />
     <Compile Include="FilterWindow.xaml.cs">
       <DependentUpon>FilterWindow.xaml</DependentUpon>
@@ -82,7 +83,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.31902.203" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0">
-      <Version>17.1.32210.191</Version>
+      <Version>17.0.32112.339</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5233" />
     <PackageReference Include="Ookii.Dialogs.Wpf">
