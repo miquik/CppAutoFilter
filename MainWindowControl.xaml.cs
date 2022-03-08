@@ -34,9 +34,6 @@ namespace CppAutoFilter
         public MainWindowControl()
         {
             this.InitializeComponent();
-            //
-            // DataContext = new FiltersVM();
-            FiltersSettings = (FiltersVM)DataContext;
         }
 
         public FiltersVM FiltersSettings
@@ -61,8 +58,8 @@ namespace CppAutoFilter
                 {
                     Name = fw.FilterItem.Name,
                     FolderPath = fw.FilterItem.FolderPath,
-                    Extensions = fw.FilterItem.Extensions
-                    // Guid = Guid.NewGuid().ToString().ToUpper()
+                    Extensions = fw.FilterItem.Extensions,
+                    ScanSubfolder = fw.FilterItem.ScanSubfolder
                 });
             }
         }
@@ -76,6 +73,11 @@ namespace CppAutoFilter
             FiltersSettings.Filters.Remove(SelectedItem);
             SelectedItem = null;
         }
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SelectedItem = (FilterItemVM)((ListView)sender).SelectedItem;
+        }
+
 
         internal void UpdateProjectInfo(Project project)
         {
@@ -107,70 +109,12 @@ namespace CppAutoFilter
                 throw new IOException("Invalid filter file");
             }
         }
-
-
-        /*
-         * <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
-    <Filter Include="File di origine">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="File di intestazione">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="File di risorse">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="provaf">
-      <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="utils\ev\ev_EditBits.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\ev\ev_Mouse.h">
-      <Filter>provaf</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="utils\ev\ev_Mouse.cpp">
-      <Filter>provaf</Filter>
-    </ClCompile>
-  </ItemGroup>
-</Project>
-        */
-
-        /*
-        private static bool ContainsFilter(string attr, string text)
-        {
-            if (attr == null)
-            {
-                return false;
-            }
-            if (attr == text)
-            {
-                return true;
-            }
-            if (Regex.IsMatch(attr, @"^" + text + @"\W"))
-            {
-                return true;
-            }
-            return false;
-        }
-        */
-
         private XElement GetOrCreateImportGroup(string childType, bool createIfNotFound = true)
         {
-            /*
-            <ItemGroup>
-                <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                  <Filter>provaf\ev</Filter>
-                </ClCompile>
-            */
+            // <ItemGroup>
+            //    <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+            //      <Filter>provaf\ev</Filter>
+            //    </ClCompile>
             XElement groupElem = filterDoc.Root
                 .Elements(Consts.SN + "ItemGroup")
                 .Where(x => x.Element(Consts.SN + childType) != null)
@@ -361,10 +305,6 @@ namespace CppAutoFilter
             Close();
         }
 
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SelectedItem = (FilterItemVM)((ListView)sender).SelectedItem;
-        }
 
         protected void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
@@ -372,3 +312,39 @@ namespace CppAutoFilter
         }
     }
 }
+
+
+/*
+ * <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="File di origine">
+<UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+<Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+</Filter>
+<Filter Include="File di intestazione">
+<UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+<Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+</Filter>
+<Filter Include="File di risorse">
+<UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+<Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+</Filter>
+<Filter Include="provaf">
+<UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
+</Filter>
+</ItemGroup>
+<ItemGroup>
+<ClInclude Include="utils\ev\ev_EditBits.h">
+<Filter>File di intestazione</Filter>
+</ClInclude>
+<ClInclude Include="utils\ev\ev_Mouse.h">
+<Filter>provaf</Filter>
+</ClInclude>
+</ItemGroup>
+<ItemGroup>
+<ClCompile Include="utils\ev\ev_Mouse.cpp">
+<Filter>provaf</Filter>
+</ClCompile>
+</ItemGroup>
+</Project>
+*/

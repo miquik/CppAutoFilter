@@ -8,6 +8,7 @@
              Background="WhiteSmoke"
              Foreground="Black"
              mc:Ignorable="d"
+             FontSize="14"
              d:DesignHeight="400" d:DesignWidth="600"
              Name="MyToolWindow">
 
@@ -15,16 +16,18 @@
     Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
     Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
     -->
+    <!--
     <Window.DataContext>
         <local:FiltersVM/>
-    </Window.DataContext>
-    <Grid>
+    </Window.DataContext>   
+    -->
+    <Grid DataContext="{Binding FiltersSettings, ElementName=MyToolWindow}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100" />
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>

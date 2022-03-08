@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CppAutoFilter"
              x:Name="fw"
-             mc:Ignorable="d" MinWidth="500" Height="300">
+             FontSize="14"
+             mc:Ignorable="d" MinWidth="500" Height="350">
     <Window.Resources>
         <local:RadioButtonCheckedConverter x:Key="rbcc"/>
     </Window.Resources>
@@ -22,6 +23,7 @@
             <RowDefinition Height="40"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="120"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Label Content="Folder path:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
@@ -54,7 +56,11 @@
                             Converter={StaticResource rbcc}}"/>
             <TextBox Text="{Binding Path=ExtensionsTemp, ElementName=fw}" Margin="0,5" VerticalContentAlignment="Center" IsEnabled="{Binding Path=IsChecked, ElementName=rbCustom}"/>
         </StackPanel>
-        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" 
+        <Label Grid.Row="3" Content="Options:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+        <StackPanel Grid.Row="3" Grid.Column="1" Margin="5">
+            <CheckBox IsChecked="{Binding ScanSubfolder}" Content="Scan sub folders"/>
+        </StackPanel>
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="3" 
                     HorizontalAlignment="Right"
                     Margin="0, 5"
                     Orientation="Horizontal">

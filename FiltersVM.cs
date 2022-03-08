@@ -16,6 +16,7 @@ namespace CppAutoFilter
         private string _filterName;
         private string _fullPath;
         private string _extensions;
+        private bool _scanSubfolder;
 
         public FilterItemVM()
         {
@@ -51,6 +52,16 @@ namespace CppAutoFilter
             }
         }
 
+        public bool ScanSubfolder
+        {
+            get => _scanSubfolder;
+            set
+            {
+                _scanSubfolder = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         // public string Guid { get; set; }
 
         public XElement Serialize()
@@ -58,7 +69,9 @@ namespace CppAutoFilter
             return new XElement(Consts.CAF + "Filter",
                     new XAttribute("Name", Name),
                     new XAttribute("FolderPath", FolderPath),
-                    new XAttribute("Extensions", Extensions));
+                    new XAttribute("Extensions", Extensions),
+                    new XAttribute("ScanSubfolder", ScanSubfolder)
+                    );
                     // new XAttribute("Guid", Guid));
         }
 
@@ -71,6 +84,7 @@ namespace CppAutoFilter
             var fName = elem.Attribute("Name");
             var fPath = elem.Attribute("FolderPath");
             var fExt = elem.Attribute("Extensions");
+            var fSSF = elem.Attribute("ScanSubfolder");
             // var fGd = elem.Attribute("Guid");
             if (fName == null || String.IsNullOrEmpty(fName.Value) || fPath == null)
             {
@@ -84,6 +98,7 @@ namespace CppAutoFilter
             filterItemVM.Name = fName.Value;
             filterItemVM.FolderPath = fPath.Value;
             filterItemVM.Extensions = fExtension;
+            filterItemVM.ScanSubfolder = (fSSF != null && String.IsNullOrEmpty(fSSF.Value) == false) ? Convert.ToBoolean(fSSF.Value) : true;
             // filterItemVM.Guid = fGuid;
             return filterItemVM;
         }
