@@ -55,10 +55,10 @@ namespace CppAutoFilter
 
         public XElement Serialize()
         {
-            return new XElement(Consts.NoneSN + "Filter",
-                    new XAttribute(Consts.NoneSN + "Name", Name),
-                    new XAttribute(Consts.NoneSN + "FolderPath", FolderPath),
-                    new XAttribute(Consts.NoneSN + "Extensions", Extensions));
+            return new XElement(Consts.CAF + "Filter",
+                    new XAttribute("Name", Name),
+                    new XAttribute("FolderPath", FolderPath),
+                    new XAttribute("Extensions", Extensions));
                     // new XAttribute("Guid", Guid));
         }
 
@@ -68,9 +68,9 @@ namespace CppAutoFilter
             {
                 return null;
             }
-            var fName = elem.Attribute(Consts.NoneSN + "Name");
-            var fPath = elem.Attribute(Consts.NoneSN + "FolderPath");
-            var fExt = elem.Attribute(Consts.NoneSN + "Extensions");
+            var fName = elem.Attribute("Name");
+            var fPath = elem.Attribute("FolderPath");
+            var fExt = elem.Attribute("Extensions");
             // var fGd = elem.Attribute("Guid");
             if (fName == null || String.IsNullOrEmpty(fName.Value) || fPath == null)
             {
@@ -123,16 +123,16 @@ namespace CppAutoFilter
 
         public XElement Serialize()
         {
-            return new XElement(Consts.NoneSN + "CppAutoFilter",
-                    new XElement(Consts.NoneSN + "ScanSubfolder", ScanSubfolder),
-                    new XElement(Consts.NoneSN + "Filters", Filters.Select<FilterItemVM, XElement>(x => x.Serialize())));
+            return new XElement(Consts.CAF + "CppAutoFilter",
+                    new XElement(Consts.CAF + "ScanSubfolder", ScanSubfolder),
+                    new XElement(Consts.CAF + "Filters", Filters.Select<FilterItemVM, XElement>(x => x.Serialize())));
         }
 
         public static XElement CreateEmptySession()
         {
-            return new XElement(Consts.NoneSN + "CppAutoFilter",
-                    new XElement(Consts.NoneSN + "ScanSubfolder", "true"),
-                    new XElement(Consts.NoneSN + "Filters"));
+            return new XElement(Consts.CAF + "CppAutoFilter",
+                    new XElement(Consts.CAF + "ScanSubfolder", "true"),
+                    new XElement(Consts.CAF + "Filters"));
         }
 
         public static FiltersVM Deserialize(XElement elem)
@@ -142,16 +142,16 @@ namespace CppAutoFilter
                 return null;
             }
 
-            if (elem.Element(Consts.NoneSN + "Filters") == null ||
-                elem.Element(Consts.NoneSN + "Filters").Elements(Consts.NoneSN + "Filter").Count() == 0)
+            if (elem.Element(Consts.CAF + "Filters") == null ||
+                elem.Element(Consts.CAF + "Filters").Elements(Consts.CAF + "Filter").Count() == 0)
             {
                 return null;
             }
 
             var scanSub = false;
-            if (elem.Element(Consts.NoneSN + "ScanSubfolder") != null)
+            if (elem.Element(Consts.CAF + "ScanSubfolder") != null)
             {
-                var ss = elem.Element(Consts.NoneSN + "ScanSubfolder");
+                var ss = elem.Element(Consts.CAF + "ScanSubfolder");
                 if (ss.Value.ToLower() == "true" || ss.Value == "1")
                 {
                     scanSub = true;
@@ -159,7 +159,7 @@ namespace CppAutoFilter
             }
 
             List<FilterItemVM> flist = new List<FilterItemVM>();
-            foreach (var el in elem.Element(Consts.NoneSN + "Filters").Elements(Consts.NoneSN + "Filter"))
+            foreach (var el in elem.Element(Consts.CAF + "Filters").Elements(Consts.CAF + "Filter"))
             {
                 var fivm = FilterItemVM.Deserialize(el);
                 if (fivm != null)

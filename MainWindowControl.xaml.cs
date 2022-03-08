@@ -95,7 +95,7 @@ namespace CppAutoFilter
             {
                 filterDoc = XDocument.Load(filterFullPath);
                 // parse CppAutoFilter element or create if not found
-                XElement extElem = filterDoc.Root.Descendants(Consts.NoneSN + "CppAutoFilter").FirstOrDefault();
+                XElement extElem = filterDoc.Root.Descendants(Consts.CAF + "CppAutoFilter").FirstOrDefault();
                 if (extElem != null)
                 {
                     FiltersSettings = FiltersVM.Deserialize(extElem);
@@ -192,9 +192,10 @@ namespace CppAutoFilter
         private XElement CreateFilterElement(string filterName)
         {
             return new XElement(Consts.SN + "Filter",
-                  new XAttribute(Consts.SN + "Include", filterName),
+                  new XAttribute("Include", filterName),
                   new XElement(Consts.SN + "UniqueIdentifier", "{" + Guid.NewGuid().ToString().ToUpper() + "}"));
         }
+
 
         private static string GetExtension(string fileName)
         {
@@ -239,7 +240,7 @@ namespace CppAutoFilter
             // check if CppAutoFilter extension settings are present, if not let's create it            
             bool isNew = false;
             XElement extElem = filterDoc.Root.Element(Consts.SN + "ProjectExtensions");
-            XElement cafElem = filterDoc.Root.Descendants(Consts.NoneSN + "CppAutoFilter").FirstOrDefault();
+            XElement cafElem = filterDoc.Root.Descendants(Consts.CAF + "CppAutoFilter").FirstOrDefault();
             if (cafElem == null)
             {
                 // exist "ProjectExtensions" session?                
@@ -306,322 +307,68 @@ namespace CppAutoFilter
                     //                    
                     // now add path to right filter
                     string ext = GetExtension(file);
-                    if (Consts.IncludeExt.Contains(ext))
-                    {
-                        //<ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                        //  <Filter>provaf\ev</Filter>
-                        //</ClCompile>
-                        includeElem.Add(new XElement(Consts.NoneSN + "ClInclude",
-                            new XAttribute(Consts.NoneSN + "Include", file),
-                            new XElement(Consts.NoneSN + "Filter", filterSubName)));
-
-                    }
-                    else if (Consts.SourceExt.Contains(ext))
-                    {
-                        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                        //     <Filter>provaf\ev</Filter>
-                        // </ClCompile>
-                        compileElem.Add(new XElement(Consts.NoneSN + "ClCompile",
-                            new XAttribute(Consts.NoneSN + "Include", file),
-                            new XElement(Consts.NoneSN + "Filter", filterSubName)));
-                    }
-                    else
-                    {
-                        //<None Include="src\util\win\ut_Win32Resources.rc2">
-                        //  <Filter>provaf\utils</Filter>
-                        //</None>
-                        otherElem.Add(new XElement(Consts.NoneSN + "None",
-                            new XAttribute(Consts.NoneSN + "Include", file),
-                            new XElement(Consts.NoneSN + "Filter", filterSubName)));
-                    }
-                }
-            }
-
-            // Add all filters to section
-            foreach (var filter in filters)
-            {
-                groupElem.Add(CreateFilterElement(filter));
-            }
-
-            // Write new settings
-            cafElem.ReplaceWith(FiltersSettings.Serialize());
-            // filterDoc.Save();
-            // vcxproj;
-        }
-
-
-        /*
-        private void Generate(object sender, RoutedEventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            if (filterDoc == null)
-            {
-                MessageBox.Show("There are some error parsing .filters file");
-                return;
-            }
-
-            // check if CppAutoFilter extension settings are present, if not let's create it            
-            bool isNew = false;
-            XElement extElem = filterDoc.Root.Element("ProjectExtensions");
-            XElement cafElem = filterDoc.Root.Descendants("CppAutoFilter").FirstOrDefault();
-            if (cafElem == null)
-            {
-                // exist "ProjectExtensions" session?                
-                if (extElem == null)
-                {
-                    extElem = new XElement("ProjectExtensions");
-                    filterDoc.Root.Add(extElem);
-                }
-                cafElem = FiltersVM.CreateEmptySession();
-                extElem.Add(cafElem);
-                isNew = true;
-            }
-
-            if (isNew == false)
-            {
-                // session already exist, so let's propagate new changes
-                // changes can be: new items added OR some items removed
-                // 1. some items are removed
-                // FiltersSettings.Filters.
-
-                // This can be addressed using the following LINQ expression:
-                // var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
-                // An alternate way of expressing this via LINQ, which some developers find more readable:
-                // var result = peopleList2.Where(p => peopleList1.All(p2 => p2.ID != p.ID));
-                var ss = cafElem.Descendants("Filter").Select(x => x.Attribute("Guid").Value);
-            }
-
-            // create filters and parse file
-            XElement groupElem = GetOrCreateImportGroup("Filter", false);
-            if (groupElem == null)
-            {
-                // ?
-                throw new Exception("Malformed filters file");
-            }
-
-            // Filters
-            HashSet<string> filters = new HashSet<string>();
-
-            // Add elements
-            XElement includeElem = GetOrCreateImportGroup("ClInclude");
-            XElement compileElem = GetOrCreateImportGroup("ClCompile");
-            XElement otherElem = GetOrCreateImportGroup("None");
-
-            // Process
-            foreach (var fi in FiltersSettings.Filters)
-            {
-                //<Filter Include="provaf">
-                //    <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
-                //</Filter>
-                // 
-                // 1. Add "Base" Filter
-                filters.Add(fi.Name);
-                // groupElem.Add(CreateFilterElement(fi.Name));
-
-                // 2. Scan selected folder
-                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                foreach (var file in Directory
-                    .EnumerateFiles(fi.FolderPath, "*", soption)
-                    .Where(file => ExtSearchPattern(file, fi.Extensions)))
-                {
-                    // create subfilter
-                    string filterSubName = Path.GetDirectoryName(file).Replace(fi.FolderPath, fi.Name);
-                    filters.Add(filterSubName);
-                    //                    
-                    // now add path to right filter
-                    string ext = GetExtension(file);
-                    if (Consts.IncludeExt.Contains(ext))
-                    {
-                        //<ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                        //  <Filter>provaf\ev</Filter>
-                        //</ClCompile>
-                        includeElem.Add(new XElement("ClInclude",
-                            new XAttribute("Include", file),
-                            new XElement("Filter", filterSubName)));
-
-                    }
-                    else if (Consts.SourceExt.Contains(ext))
-                    {
-                        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                        //     <Filter>provaf\ev</Filter>
-                        // </ClCompile>
-                        compileElem.Add(new XElement("ClCompile",
-                            new XAttribute("Include", file),
-                            new XElement("Filter", filterSubName)));
-                    }
-                    else
-                    {
-                        //<None Include="src\util\win\ut_Win32Resources.rc2">
-                        //  <Filter>provaf\utils</Filter>
-                        //</None>
-                        otherElem.Add(new XElement("None",
-                            new XAttribute("Include", file),
-                            new XElement("Filter", filterSubName)));
-                    }
-                }
-            }
-
-            // Add all filters to section
-            foreach (var filter in filters)
-            {
-                groupElem.Add(CreateFilterElement(filter));
-            }
-
-
-            // Write new settings
-            cafElem.ReplaceWith(FiltersSettings.Serialize());
-            // filterDoc.Save();
-            // vcxproj;
-        }
-        */
-
-        /*
-        public static XmlDocument RemoveXmlns(String xml)
-        {
-            XDocument d = XDocument.Parse(xml);
-            d.Root.Descendants().Attributes().Where(x => x.IsNamespaceDeclaration).Remove();
-
-            foreach (var elem in d.Descendants())
-                elem.Name = elem.Name.LocalName;
-
-            var xmlDocument = new XmlDocument();
-            xmlDocument.Load(d.CreateReader());
-
-            return xmlDocument;
-        }
-        */
-
-        /*
-        private void Generate(object sender, RoutedEventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            if (filterDoc == null)
-            {
-                MessageBox.Show("There are some error parsing .filters file");
-                return;
-            }
-
-            // check if CppAutoFilter extension settings are present, if not let's create it            
-            bool isNew = false;
-            XElement extElem = filterDoc.Root.Element(Consts.SN + "ProjectExtensions");
-            XElement cafElem = filterDoc.Root.Descendants(Consts.SN + "CppAutoFilter").FirstOrDefault();
-            if (cafElem == null)
-            {
-                // exist "ProjectExtensions" session?                
-                if (extElem == null)
-                {
-                    extElem = new XElement(Consts.SN + "ProjectExtensions");
-                    filterDoc.Root.Add(extElem);
-                }
-                cafElem = FiltersVM.CreateEmptySession();
-                extElem.Add(cafElem);
-                isNew = true;
-            }
-
-            if (isNew == false)
-            {
-                // session already exist, so let's propagate new changes
-                // changes can be: new items added OR some items removed
-                // 1. some items are removed
-                // FiltersSettings.Filters.
-
-                // This can be addressed using the following LINQ expression:
-                // var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
-                // An alternate way of expressing this via LINQ, which some developers find more readable:
-                // var result = peopleList2.Where(p => peopleList1.All(p2 => p2.ID != p.ID));
-                var ss = cafElem.Descendants(Consts.SN + "Filter").Select(x => x.Attribute(Consts.SN + "Guid").Value);
-            }
-
-            // create filters and parse file
-            XElement groupElem = GetOrCreateImportGroup("Filter", false);
-            if (groupElem == null)
-            {
-                // ?
-                throw new Exception("Malformed filters file");
-            }
-
-
-            // Add elements
-            XElement includeElem = GetOrCreateImportGroup("ClInclude");
-            XElement compileElem = GetOrCreateImportGroup("ClCompile");
-            XElement otherElem = GetOrCreateImportGroup("None");
-
-            // Process
-            foreach (var fi in FiltersSettings.Filters)
-            {
-                //<Filter Include="provaf">
-                //    <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
-                //</Filter>
-                // 1. Add Filter
-                groupElem.Add(new XElement(Consts.SN + "Filter",
-                    new XAttribute(Consts.SN + "Include", fi.Name),
-                    new XElement(Consts.SN + "UniqueIdentifier", "{" + fi.Guid.ToLower() + "}")));
-
-                // 2. Scan selected folder
-                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                foreach (var file in Directory
-                    .EnumerateFiles(fi.FolderPath, "*", soption)
-                    .Where(file => ExtSearchPattern(file, fi.Extensions)))
-                {
-                    // now add path to right filter
-                    string ext = GetExtension(file);
+                    string relFile = Utils.GetRelativePath(file, Path.GetDirectoryName(thisProject.FullName));
                     if (Consts.IncludeExt.Contains(ext))
                     {
                         //<ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
                         //  <Filter>provaf\ev</Filter>
                         //</ClCompile>
                         includeElem.Add(new XElement(Consts.SN + "ClInclude",
-                            new XAttribute(Consts.SN + "Include", file),
-                            new XElement(Consts.SN + "Filter", fi.Name)));
+                            new XAttribute("Include", relFile),
+                            new XElement(Consts.SN + "Filter", filterSubName)));
 
-                    } else if (Consts.SourceExt.Contains(ext))
+                    }
+                    else if (Consts.SourceExt.Contains(ext))
                     {
                         // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
                         //     <Filter>provaf\ev</Filter>
                         // </ClCompile>
                         compileElem.Add(new XElement(Consts.SN + "ClCompile",
-                            new XAttribute(Consts.SN + "Include", file),
-                            new XElement(Consts.SN + "Filter", fi.Name)));
-                    } else
+                            new XAttribute("Include", relFile),
+                            new XElement(Consts.SN + "Filter", filterSubName)));
+                    }
+                    else
                     {
                         //<None Include="src\util\win\ut_Win32Resources.rc2">
                         //  <Filter>provaf\utils</Filter>
                         //</None>
                         otherElem.Add(new XElement(Consts.SN + "None",
-                            new XAttribute(Consts.SN + "Include", file),
-                            new XElement(Consts.SN + "Filter", fi.Name)));
+                            new XAttribute("Include", relFile),
+                            new XElement(Consts.SN + "Filter", filterSubName)));
                     }
                 }
             }
 
+            // Add all filters to section
+            foreach (var filter in filters)
+            {
+                groupElem.Add(CreateFilterElement(filter));
+            }
 
             // Write new settings
             cafElem.ReplaceWith(FiltersSettings.Serialize());
-            // filterDoc.Save();
-            // vcxproj;
+            // save filter file
+            filterDoc.Save(filterFullPath);
+            // Is there a better way????
+            thisProject.DTE.ExecuteCommand("Project.UnloadProject");
+            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
+            //
+            Close();
         }
-        */
 
         private void Exit(object sender, RoutedEventArgs e)
         {
             Close();
         }
 
-        private void Reparse(object sender, RoutedEventArgs e)
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            SelectedItem = (FilterItemVM)((ListView)sender).SelectedItem;
         }
 
         protected void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SelectedItem = (FilterItemVM)((ListView)sender).SelectedItem;
         }
     }
 }
