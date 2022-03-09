@@ -61,8 +61,8 @@
                     HorizontalAlignment="Right"
                     Margin="5"
                     Orientation="Horizontal">
-            <!--<Button Content="Reparse" Width="100" Margin="5, 0" Click="Reparse"/>-->
-            <Button Content="Generate" Width="100" Margin="5, 0" Click="Generate"/>
+            <Button Content="Clean" Width="100" Margin="5, 0, 50, 0" Click="Clean" />
+            <Button Content="Update" Width="100" Margin="5, 0" Click="Generate"/>
             <Button Content="Exit" Width="100" Margin="5, 0" Click="Exit"/>
         </StackPanel>
     </Grid>

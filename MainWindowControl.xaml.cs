@@ -232,8 +232,9 @@ namespace CppAutoFilter
 #endif
                 // Clean everything before process
                 // TODO
+                CleanOldItems(cafElem);
             }
-            GenerateAddNewItems(FiltersSettings);
+            GenerateNewItems(FiltersSettings);
             
 
             // Write new settings
@@ -248,7 +249,7 @@ namespace CppAutoFilter
         }
 
 
-        private void GenerateAddNewItems(FiltersVM filtersVM)
+        private void GenerateNewItems(FiltersVM filtersVM)
         {
             // create filters and parse file
             XElement groupElem = GetOrCreateImportGroup(filterDoc, "Filter", false);
@@ -367,6 +368,120 @@ namespace CppAutoFilter
                 }
             }
         }
+
+        private void CleanOldItems(XElement cafElem)
+        {
+            var oldSettings = FiltersVM.Deserialize(cafElem);
+            if (oldSettings == null)
+            {
+                throw new Exception("Malformed CppAutoFilter session");
+            }
+
+            XElement groupElem = GetOrCreateImportGroup(filterDoc, "Filter", false);
+
+            // get all filters
+            List<XElement> filters = new List<XElement>();
+            foreach (var item in oldSettings.Filters)
+            {
+                filters.AddRange(groupElem
+                    .Elements(Consts.SN + "Filter")
+                    .Where(x => x.Attribute("Include").Value.StartsWith(item.Name)));
+            }
+
+            // Get Project Sessions
+            XElement projIncludeElem = GetOrCreateImportGroup(projDoc, "ClInclude", false);
+            XElement projCompileElem = GetOrCreateImportGroup(projDoc, "ClCompile", false);
+            XElement projOtherElem = GetOrCreateImportGroup(projDoc, "None", false);
+
+            // Get Filter Sessions
+            XElement includeElem = GetOrCreateImportGroup(filterDoc, "ClInclude", false);
+            XElement compileElem = GetOrCreateImportGroup(filterDoc, "ClCompile", false);
+            XElement otherElem = GetOrCreateImportGroup(filterDoc, "None", false);
+
+            // get all elements
+            List<XElement> filterElems = new List<XElement>();
+            foreach (var item in filters)
+            {
+                if (includeElem != null)
+                {
+                    filterElems.AddRange(includeElem
+                        .Elements(Consts.SN + "ClInclude")
+                        .Where(x => x.Element(Consts.SN + "Filter").Value == item.Attribute("Include").Value));
+                }
+                if (compileElem != null)
+                {
+                    filterElems.AddRange(compileElem
+                        .Elements(Consts.SN + "ClCompile")
+                        .Where(x => x.Element(Consts.SN + "Filter").Value == item.Attribute("Include").Value));
+                }
+                if (otherElem != null)
+                {
+                    filterElems.AddRange(otherElem
+                        .Elements(Consts.SN + "None")
+                        .Where(x => x.Element(Consts.SN + "Filter").Value == item.Attribute("Include").Value));
+                }
+            }
+
+            List<XElement> projElems = new List<XElement>();
+            foreach (var item in filterElems)
+            {
+                if (projCompileElem != null)
+                {
+                    projElems.AddRange(projIncludeElem
+                        .Elements(Consts.SN + "ClInclude")
+                        .Where(x => x.Attribute("Include").Value == item.Attribute("Include").Value));
+                }
+                if (projCompileElem != null)
+                {
+                    projElems.AddRange(projCompileElem
+                        .Elements(Consts.SN + "ClCompile")
+                        .Where(x => x.Attribute("Include").Value == item.Attribute("Include").Value));
+                }
+                if (projOtherElem != null)
+                {
+                    projElems.AddRange(projOtherElem
+                        .Elements(Consts.SN + "None")
+                        .Where(x => x.Attribute("Include").Value == item.Attribute("Include").Value));
+                }
+            }
+
+            projElems.Remove();
+            filterElems.Remove();
+            filters.Remove();
+        }
+
+        private void Clean(object sender, RoutedEventArgs e)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (filterDoc == null || projDoc == null)
+            {
+                MessageBox.Show("There are some error parsing .filters file");
+                return;
+            }
+
+            thisProject.DTE.ExecuteCommand("Project.UnloadProject");
+
+            XElement cafElem = filterDoc.Root.Descendants(Consts.CAF + "CppAutoFilter").FirstOrDefault();
+            if (cafElem == null)
+            {
+                return;
+            }
+            CleanOldItems(cafElem);
+
+            // Write new settings
+            cafElem.Remove();
+            // save filter file
+            filterDoc.Save(filterFullPath);
+            projDoc.Save(projectFullPath);
+
+            // Clean all
+            FiltersSettings = new FiltersVM();
+
+            // Reload project
+            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
+        }
+
 
         private void Exit(object sender, RoutedEventArgs e)
         {
