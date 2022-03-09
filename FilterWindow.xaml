@@ -3,15 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CppAutoFilter"
+             xmlns:misc="clr-namespace:CppAutoFilter.Misc"
+             xmlns:vm="clr-namespace:CppAutoFilter.ViewModels"
              x:Name="fw"
              FontSize="14"
              mc:Ignorable="d" MinWidth="500" Height="350">
     <Window.Resources>
-        <local:RadioButtonCheckedConverter x:Key="rbcc"/>
+        <misc:RadioButtonCheckedConverter x:Key="rbcc"/>
     </Window.Resources>
     <Window.DataContext>
-        <local:FilterItemVM/>
+        <vm:FilterItemVM/>
     </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -38,19 +39,19 @@
             <RadioButton Content="All files" 
                          IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
-                            ConverterParameter={x:Static local:Consts.FilterAllFiles}}"/>
+                            ConverterParameter={x:Static misc:Consts.FilterAllFiles}}"/>
             <RadioButton Content="Source files"
                           IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
-                            ConverterParameter={x:Static local:Consts.FilterSourceFiles}}"/>
+                            ConverterParameter={x:Static misc:Consts.FilterSourceFiles}}"/>
             <RadioButton Content="Include files"
                           IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
-                            ConverterParameter={x:Static local:Consts.FilterIncludeFiles}}"/>
+                            ConverterParameter={x:Static misc:Consts.FilterIncludeFiles}}"/>
             <RadioButton Content="Resource files"
                           IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}, 
-                            ConverterParameter={x:Static local:Consts.FilterResFiles}}"/>
+                            ConverterParameter={x:Static misc:Consts.FilterResFiles}}"/>
             <RadioButton x:Name="rbCustom" Content="Custom extension"
                           IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}}"/>

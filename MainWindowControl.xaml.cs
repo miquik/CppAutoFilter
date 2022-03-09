@@ -1,4 +1,6 @@
-﻿using EnvDTE;
+﻿using CppAutoFilter.Misc;
+using CppAutoFilter.ViewModels;
+using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,7 @@ namespace CppAutoFilter
         private Project thisProject;
         private string filterFullPath;
         private XDocument filterDoc;
+        private XDocument projDoc;
 
         private FiltersVM filtersSettings;
         private FilterItemVM selectedItem = null;
@@ -34,6 +37,8 @@ namespace CppAutoFilter
         public MainWindowControl()
         {
             this.InitializeComponent();
+            //
+            FiltersSettings = new FiltersVM();
         }
 
         public FiltersVM FiltersSettings
@@ -95,6 +100,7 @@ namespace CppAutoFilter
             // try parse existing settings
             try
             {
+                projDoc = XDocument.Load(thisProject.FullName);
                 filterDoc = XDocument.Load(filterFullPath);
                 // parse CppAutoFilter element or create if not found
                 XElement extElem = filterDoc.Root.Descendants(Consts.CAF + "CppAutoFilter").FirstOrDefault();
@@ -105,17 +111,18 @@ namespace CppAutoFilter
             }
             catch (Exception)
             {
+                projDoc = null;
                 filterDoc = null;
                 throw new IOException("Invalid filter file");
             }
         }
-        private XElement GetOrCreateImportGroup(string childType, bool createIfNotFound = true)
+        private XElement GetOrCreateImportGroup(XDocument doc, string childType, bool createIfNotFound = true)
         {
             // <ItemGroup>
             //    <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
             //      <Filter>provaf\ev</Filter>
             //    </ClCompile>
-            XElement groupElem = filterDoc.Root
+            XElement groupElem = doc.Root
                 .Elements(Consts.SN + "ItemGroup")
                 .Where(x => x.Element(Consts.SN + childType) != null)
                 .FirstOrDefault();
@@ -127,7 +134,7 @@ namespace CppAutoFilter
             if (createIfNotFound)
             {
                 groupElem = new XElement(Consts.SN + "ItemGroup");
-                filterDoc.Root.Add(groupElem);
+                doc.Root.Add(groupElem);
                 return groupElem;
             }
             return null;
@@ -175,7 +182,7 @@ namespace CppAutoFilter
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            if (filterDoc == null)
+            if (filterDoc == null || projDoc == null)
             {
                 MessageBox.Show("There are some error parsing .filters file");
                 return;
@@ -213,7 +220,7 @@ namespace CppAutoFilter
             }
 
             // create filters and parse file
-            XElement groupElem = GetOrCreateImportGroup("Filter", false);
+            XElement groupElem = GetOrCreateImportGroup(filterDoc, "Filter", false);
             if (groupElem == null)
             {
                 // ?
@@ -223,13 +230,19 @@ namespace CppAutoFilter
             // Filters
             HashSet<string> filters = new HashSet<string>();
 
-            // Add elements
-            XElement includeElem = GetOrCreateImportGroup("ClInclude");
-            XElement compileElem = GetOrCreateImportGroup("ClCompile");
-            XElement otherElem = GetOrCreateImportGroup("None");
+            // Get Project Sessions
+            XElement projIncludeElem = GetOrCreateImportGroup(projDoc, "ClInclude");
+            XElement projCompileElem = GetOrCreateImportGroup(projDoc, "ClCompile");
+            XElement projOtherElem = GetOrCreateImportGroup(projDoc, "None");
+
+            // Get Filter Sessions
+            XElement includeElem = GetOrCreateImportGroup(filterDoc, "ClInclude");
+            XElement compileElem = GetOrCreateImportGroup(filterDoc, "ClCompile");
+            XElement otherElem = GetOrCreateImportGroup(filterDoc, "None");
 
             // Process
-            foreach (var fi in FiltersSettings.Filters)
+            // order extension so priority is given to 'custom ext' then down to 'all files'
+            foreach (var fi in FiltersSettings.Filters.OrderBy(x => x.Extensions, new ExtensionComparer()))
             {
                 //<Filter Include="provaf">
                 //    <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
@@ -237,30 +250,57 @@ namespace CppAutoFilter
                 // 
                 // 1. Add "Base" Filter
                 filters.Add(fi.Name);
-                // groupElem.Add(CreateFilterElement(fi.Name));
 
-                // 2. Scan selected folder
-                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                // 2. Create filter-tree to mimic directory structure
+                SearchOption soption = fi.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                foreach (var dir in Directory.EnumerateDirectories(fi.FolderPath, "*", soption))
+                {
+                    // create subfilter
+                    filters.Add(dir.Replace(fi.FolderPath, fi.Name));
+                }
+
+                /*
+                 <!--
+                  <ItemGroup>
+                    <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
+                    <ClCompile Include="src\ev\xp\ev_EditEventMapper.cpp" />
+                    <ClCompile Include="src\util\win\ut_debugmsg.cpp" />
+                    <ClCompile Include="src\util\win\ut_path.cpp" />
+                  </ItemGroup>
+                  <ItemGroup>
+                    <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+                    <ClInclude Include="src\ev\xp\ev_EditBits.h" />
+                    <ClInclude Include="src\ev\xp\ev_EditEventMapper.h" />
+                    <ClInclude Include="src\util\win\ut_mutexImpl.h" />
+                  </ItemGroup>
+                  <ItemGroup>
+                    <None Include="src\util\Makefile.am" />
+                    <None Include="src\util\win\ut_Win32Resources.rc2" />
+                  </ItemGroup>
+                  -->*/
+
+                // 2. Scan selected folder for files
+                // SearchOption soption = fi.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                 foreach (var file in Directory
                     .EnumerateFiles(fi.FolderPath, "*", soption)
                     .Where(file => ExtSearchPattern(file, fi.Extensions)))
                 {
-                    // create subfilter
+                    // Add path to filter session and proj session
                     string filterSubName = Path.GetDirectoryName(file).Replace(fi.FolderPath, fi.Name);
-                    filters.Add(filterSubName);
-                    //                    
-                    // now add path to right filter
                     string ext = GetExtension(file);
                     string relFile = Utils.GetRelativePath(file, Path.GetDirectoryName(thisProject.FullName));
                     if (Consts.IncludeExt.Contains(ext))
                     {
-                        //<ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+                        //<ClInclude Include="src\ev\xp\ev_EditBinding.h" />
                         //  <Filter>provaf\ev</Filter>
-                        //</ClCompile>
+                        //</ClInclude>
                         includeElem.Add(new XElement(Consts.SN + "ClInclude",
                             new XAttribute("Include", relFile),
                             new XElement(Consts.SN + "Filter", filterSubName)));
-
+                        // Proj Session
+                        // <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+                        projIncludeElem.Add(new XElement(Consts.SN + "ClInclude",
+                            new XAttribute("Include", relFile)));
                     }
                     else if (Consts.SourceExt.Contains(ext))
                     {
@@ -270,6 +310,9 @@ namespace CppAutoFilter
                         compileElem.Add(new XElement(Consts.SN + "ClCompile",
                             new XAttribute("Include", relFile),
                             new XElement(Consts.SN + "Filter", filterSubName)));
+                        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
+                        projCompileElem.Add(new XElement(Consts.SN + "ClCompile",
+                            new XAttribute("Include", relFile)));
                     }
                     else
                     {
@@ -279,6 +322,9 @@ namespace CppAutoFilter
                         otherElem.Add(new XElement(Consts.SN + "None",
                             new XAttribute("Include", relFile),
                             new XElement(Consts.SN + "Filter", filterSubName)));
+                        // <None Include="src\util\win\ut_Win32Resources.rc2" />
+                        projOtherElem.Add(new XElement(Consts.SN + "None",
+                            new XAttribute("Include", relFile)));
                     }
                 }
             }
@@ -293,10 +339,12 @@ namespace CppAutoFilter
             cafElem.ReplaceWith(FiltersSettings.Serialize());
             // save filter file
             filterDoc.Save(filterFullPath);
-            // Is there a better way????
-            thisProject.DTE.ExecuteCommand("Project.UnloadProject");
-            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
-            //
+            projDoc.Save(thisProject.FullName);
+
+            // Unload project
+            // thisProject.DTE.ExecuteCommand("Project.UnloadProject");
+            // Reload project
+            // thisProject.DTE.ExecuteCommand("Project.ReloadProject");
             Close();
         }
 

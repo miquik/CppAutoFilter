@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace CppAutoFilter
+namespace CppAutoFilter.Misc
 {
     public class ObservableBase : INotifyPropertyChanged
     {        

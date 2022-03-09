@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace CppAutoFilter
+namespace CppAutoFilter.Misc
 {
     public class RadioButtonCheckedConverter : IValueConverter
     {

@@ -45,8 +45,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Consts.cs" />
-    <Compile Include="FiltersVM.cs" />
+    <Compile Include="Misc\Consts.cs" />
+    <Compile Include="Misc\ExtensionComparer.cs" />
+    <Compile Include="ViewModels\FilterItemVM.cs" />
+    <Compile Include="ViewModels\FiltersVM.cs" />
     <Compile Include="FilterWindow.xaml.cs">
       <DependentUpon>FilterWindow.xaml</DependentUpon>
     </Compile>
@@ -54,11 +56,11 @@
     <Compile Include="MainWindowControl.xaml.cs">
       <DependentUpon>MainWindowControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ObservableBase.cs" />
+    <Compile Include="Misc\ObservableBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CppAutoFilterPackage.cs" />
-    <Compile Include="RadioButtonCheckedConverter.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Misc\RadioButtonCheckedConverter.cs" />
+    <Compile Include="Misc\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

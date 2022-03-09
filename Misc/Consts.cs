@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace CppAutoFilter
+namespace CppAutoFilter.Misc
 {
     internal class Consts
     {
@@ -14,10 +14,10 @@ namespace CppAutoFilter
         public static XNamespace NoneSN = "";
 
 
-        public static string FilterAllFiles = "%%all%%";
-        public static string FilterSourceFiles = "%%sources%%";
-        public static string FilterIncludeFiles = "%%includes%%";
-        public static string FilterResFiles = "%%res%%";
+        public const string FilterAllFiles = "%%all%%";
+        public const string FilterSourceFiles = "%%sources%%";
+        public const string FilterIncludeFiles = "%%includes%%";
+        public const string FilterResFiles = "%%res%%";
 
         public static string SourceExt = "cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx;";
         public static string IncludeExt = "h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd;";
