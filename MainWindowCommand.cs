@@ -5,6 +5,7 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Task = System.Threading.Tasks.Task;
 
 namespace CppAutoFilter
@@ -113,8 +114,14 @@ namespace CppAutoFilter
                 Array projects = dte.ActiveSolutionProjects as Array;
                 if (projects != null && projects.Length != 0)
                 {
-
                     EnvDTE.Project selectedProject = projects.GetValue(0) as EnvDTE.Project;
+
+                    if (System.IO.Path.GetExtension(selectedProject.FullName) != ".vcxproj")
+                    {
+                        MessageBox.Show("CppAutoFilter needs an active C++ project");
+                        return;
+                    }
+
                     MainWindowControl mainToolWindow = (MainWindowControl)window;
                     mainToolWindow.UpdateProjectInfo(selectedProject);
                 }
