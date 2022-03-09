@@ -213,18 +213,43 @@ namespace CppAutoFilter
 
             if (isNew == false)
             {
+#if NEXT_VERSION
                 // session already exist, so let's propagate new changes
                 // changes can be: new items added OR some items removed
                 // 1. some items are removed
-                // FiltersSettings.Filters.
+                // cafElem.Descendants(Consts.CAF + "Filter")
+                var oldSettings = FiltersVM.Deserialize(cafElem);
+                var elementsToRemove = oldSettings
+                    .Filters
+                    .Where(p => FiltersSettings.Filters.All(p2 => !Utils.IsSameFilterItem(p2, p)));
+
 
                 // This can be addressed using the following LINQ expression:
                 // var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
                 // An alternate way of expressing this via LINQ, which some developers find more readable:
                 // var result = peopleList2.Where(p => peopleList1.All(p2 => p2.ID != p.ID));
                 // var ss = cafElem.Descendants("Filter").Select(x => x.Attribute("Guid").Value);
+#endif
+                // Clean everything before process
+                // TODO
             }
+            GenerateAddNewItems(FiltersSettings);
+            
 
+            // Write new settings
+            cafElem.ReplaceWith(FiltersSettings.Serialize());
+            // save filter file
+            filterDoc.Save(filterFullPath);
+            projDoc.Save(projectFullPath);
+
+            // Reload project
+            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
+            Close();
+        }
+
+
+        private void GenerateAddNewItems(FiltersVM filtersVM)
+        {
             // create filters and parse file
             XElement groupElem = GetOrCreateImportGroup(filterDoc, "Filter", false);
             if (groupElem == null)
@@ -249,7 +274,7 @@ namespace CppAutoFilter
 
             // Process
             // order extension so priority is given to 'custom ext' then down to 'all files'
-            foreach (var fi in FiltersSettings.Filters.OrderBy(x => x.Extensions, new ExtensionComparer()))
+            foreach (var fi in filtersVM.Filters.OrderBy(x => x.Extensions, new ExtensionComparer()))
             {
                 //<Filter Include="provaf">
                 //    <UniqueIdentifier>{bc7222e4-73eb-4efc-907d-4a4ab2e3549d}</UniqueIdentifier>
@@ -259,7 +284,7 @@ namespace CppAutoFilter
                 filters.Add(fi.Name);
 
                 // 2. Create filter-tree to mimic directory structure
-                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                SearchOption soption = filtersVM.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
                 if (fi.CreateFolderTree)
                 {
@@ -341,16 +366,6 @@ namespace CppAutoFilter
                         new XAttribute("Include", relFile)));
                 }
             }
-
-            // Write new settings
-            cafElem.ReplaceWith(FiltersSettings.Serialize());
-            // save filter file
-            filterDoc.Save(filterFullPath);
-            projDoc.Save(projectFullPath);
-
-            // Reload project
-            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
-            Close();
         }
 
         private void Exit(object sender, RoutedEventArgs e)
