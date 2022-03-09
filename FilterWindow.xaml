@@ -23,7 +23,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="40"/>
-            <RowDefinition Height="120"/>
+            <RowDefinition Height="130"/>
             <RowDefinition Height="50"/>
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
@@ -55,11 +55,11 @@
             <RadioButton x:Name="rbCustom" Content="Custom extension"
                           IsChecked="{Binding Extensions,
                             Converter={StaticResource rbcc}}"/>
-            <TextBox Text="{Binding Path=ExtensionsTemp, ElementName=fw}" Margin="0,5" VerticalContentAlignment="Center" IsEnabled="{Binding Path=IsChecked, ElementName=rbCustom}"/>
+            <TextBox Text="{Binding Path=ExtensionsTemp, ElementName=fw, Mode=TwoWay}" Margin="0,5" VerticalContentAlignment="Center" IsEnabled="{Binding Path=IsChecked, ElementName=rbCustom}"/>
         </StackPanel>
         <Label Grid.Row="3" Content="Options:" VerticalAlignment="Top" HorizontalAlignment="Right"/>
         <StackPanel Grid.Row="3" Grid.Column="1" Margin="5">
-            <CheckBox IsChecked="{Binding ScanSubfolder}" Content="Scan sub folders"/>
+            <CheckBox IsChecked="{Binding CreateFolderTree}" Content="Create folder tree"/>
         </StackPanel>
         <StackPanel Grid.Row="4" Grid.ColumnSpan="3" 
                     HorizontalAlignment="Right"

@@ -23,6 +23,7 @@ namespace CppAutoFilter
     {
         private Project thisProject;
         private string filterFullPath;
+        private string projectFullPath;
         private XDocument filterDoc;
         private XDocument projDoc;
 
@@ -44,7 +45,8 @@ namespace CppAutoFilter
         public FiltersVM FiltersSettings
         {
             get => filtersSettings;
-            set {
+            set
+            {
                 filtersSettings = value;
                 NotifyPropertyChanged();
             }
@@ -64,7 +66,7 @@ namespace CppAutoFilter
                     Name = fw.FilterItem.Name,
                     FolderPath = fw.FilterItem.FolderPath,
                     Extensions = fw.FilterItem.Extensions,
-                    ScanSubfolder = fw.FilterItem.ScanSubfolder
+                    CreateFolderTree = fw.FilterItem.CreateFolderTree
                 });
             }
         }
@@ -92,6 +94,7 @@ namespace CppAutoFilter
 
             //
             filterFullPath = thisProject.FullName + ".filters";
+            projectFullPath = thisProject.FullName;
             bool exist = System.IO.File.Exists(filterFullPath);
             if (exist == false)
             {
@@ -188,6 +191,9 @@ namespace CppAutoFilter
                 return;
             }
 
+            // Unload project
+            thisProject.DTE.ExecuteCommand("Project.UnloadProject");
+
             // check if CppAutoFilter extension settings are present, if not let's create it            
             bool isNew = false;
             XElement extElem = filterDoc.Root.Element(Consts.SN + "ProjectExtensions");
@@ -229,6 +235,7 @@ namespace CppAutoFilter
 
             // Filters
             HashSet<string> filters = new HashSet<string>();
+            Dictionary<string, Tuple<string, FilterItemVM>> filterContents = new Dictionary<string, Tuple<string, FilterItemVM>>();
 
             // Get Project Sessions
             XElement projIncludeElem = GetOrCreateImportGroup(projDoc, "ClInclude");
@@ -252,79 +259,28 @@ namespace CppAutoFilter
                 filters.Add(fi.Name);
 
                 // 2. Create filter-tree to mimic directory structure
-                SearchOption soption = fi.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                foreach (var dir in Directory.EnumerateDirectories(fi.FolderPath, "*", soption))
+                SearchOption soption = FiltersSettings.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+                if (fi.CreateFolderTree)
                 {
-                    // create subfilter
-                    filters.Add(dir.Replace(fi.FolderPath, fi.Name));
+                    foreach (var dir in Directory.EnumerateDirectories(fi.FolderPath, "*", soption))
+                    {
+                        // create subfilter
+                        filters.Add(dir.Replace(fi.FolderPath, fi.Name));
+                    }
                 }
 
-                /*
-                 <!--
-                  <ItemGroup>
-                    <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
-                    <ClCompile Include="src\ev\xp\ev_EditEventMapper.cpp" />
-                    <ClCompile Include="src\util\win\ut_debugmsg.cpp" />
-                    <ClCompile Include="src\util\win\ut_path.cpp" />
-                  </ItemGroup>
-                  <ItemGroup>
-                    <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
-                    <ClInclude Include="src\ev\xp\ev_EditBits.h" />
-                    <ClInclude Include="src\ev\xp\ev_EditEventMapper.h" />
-                    <ClInclude Include="src\util\win\ut_mutexImpl.h" />
-                  </ItemGroup>
-                  <ItemGroup>
-                    <None Include="src\util\Makefile.am" />
-                    <None Include="src\util\win\ut_Win32Resources.rc2" />
-                  </ItemGroup>
-                  -->*/
-
                 // 2. Scan selected folder for files
-                // SearchOption soption = fi.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                 foreach (var file in Directory
                     .EnumerateFiles(fi.FolderPath, "*", soption)
                     .Where(file => ExtSearchPattern(file, fi.Extensions)))
                 {
                     // Add path to filter session and proj session
-                    string filterSubName = Path.GetDirectoryName(file).Replace(fi.FolderPath, fi.Name);
-                    string ext = GetExtension(file);
-                    string relFile = Utils.GetRelativePath(file, Path.GetDirectoryName(thisProject.FullName));
-                    if (Consts.IncludeExt.Contains(ext))
+                    string relFile = Utils.GetRelativePath(file, Path.GetDirectoryName(projectFullPath));
+                    if (filterContents.ContainsKey(relFile) == false)
                     {
-                        //<ClInclude Include="src\ev\xp\ev_EditBinding.h" />
-                        //  <Filter>provaf\ev</Filter>
-                        //</ClInclude>
-                        includeElem.Add(new XElement(Consts.SN + "ClInclude",
-                            new XAttribute("Include", relFile),
-                            new XElement(Consts.SN + "Filter", filterSubName)));
-                        // Proj Session
-                        // <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
-                        projIncludeElem.Add(new XElement(Consts.SN + "ClInclude",
-                            new XAttribute("Include", relFile)));
-                    }
-                    else if (Consts.SourceExt.Contains(ext))
-                    {
-                        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
-                        //     <Filter>provaf\ev</Filter>
-                        // </ClCompile>
-                        compileElem.Add(new XElement(Consts.SN + "ClCompile",
-                            new XAttribute("Include", relFile),
-                            new XElement(Consts.SN + "Filter", filterSubName)));
-                        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
-                        projCompileElem.Add(new XElement(Consts.SN + "ClCompile",
-                            new XAttribute("Include", relFile)));
-                    }
-                    else
-                    {
-                        //<None Include="src\util\win\ut_Win32Resources.rc2">
-                        //  <Filter>provaf\utils</Filter>
-                        //</None>
-                        otherElem.Add(new XElement(Consts.SN + "None",
-                            new XAttribute("Include", relFile),
-                            new XElement(Consts.SN + "Filter", filterSubName)));
-                        // <None Include="src\util\win\ut_Win32Resources.rc2" />
-                        projOtherElem.Add(new XElement(Consts.SN + "None",
-                            new XAttribute("Include", relFile)));
+                        // Add to contents
+                        filterContents.Add(relFile, new Tuple<string, FilterItemVM>(file, fi));
                     }
                 }
             }
@@ -335,16 +291,65 @@ namespace CppAutoFilter
                 groupElem.Add(CreateFilterElement(filter));
             }
 
+            foreach (var item in filterContents)
+            {
+                string relFile = item.Key;
+                string file = item.Value.Item1;
+                FilterItemVM fi = item.Value.Item2;
+                //
+                string filterSubName = fi.Name;
+                if (fi.CreateFolderTree)
+                {
+                    filterSubName = Path.GetDirectoryName(file).Replace(fi.FolderPath, fi.Name);
+                }
+                string ext = GetExtension(file);
+                if (Consts.IncludeExt.Contains(ext))
+                {
+                    //<ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+                    //  <Filter>provaf\ev</Filter>
+                    //</ClInclude>
+                    includeElem.Add(new XElement(Consts.SN + "ClInclude",
+                        new XAttribute("Include", relFile),
+                        new XElement(Consts.SN + "Filter", filterSubName)));
+                    // Proj Session
+                    // <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+                    projIncludeElem.Add(new XElement(Consts.SN + "ClInclude",
+                        new XAttribute("Include", relFile)));
+                }
+                else if (Consts.SourceExt.Contains(ext))
+                {
+                    // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+                    //     <Filter>provaf\ev</Filter>
+                    // </ClCompile>
+                    compileElem.Add(new XElement(Consts.SN + "ClCompile",
+                        new XAttribute("Include", relFile),
+                        new XElement(Consts.SN + "Filter", filterSubName)));
+                    // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
+                    projCompileElem.Add(new XElement(Consts.SN + "ClCompile",
+                        new XAttribute("Include", relFile)));
+                }
+                else
+                {
+                    //<None Include="src\util\win\ut_Win32Resources.rc2">
+                    //  <Filter>provaf\utils</Filter>
+                    //</None>
+                    otherElem.Add(new XElement(Consts.SN + "None",
+                        new XAttribute("Include", relFile),
+                        new XElement(Consts.SN + "Filter", filterSubName)));
+                    // <None Include="src\util\win\ut_Win32Resources.rc2" />
+                    projOtherElem.Add(new XElement(Consts.SN + "None",
+                        new XAttribute("Include", relFile)));
+                }
+            }
+
             // Write new settings
             cafElem.ReplaceWith(FiltersSettings.Serialize());
             // save filter file
             filterDoc.Save(filterFullPath);
-            projDoc.Save(thisProject.FullName);
+            projDoc.Save(projectFullPath);
 
-            // Unload project
-            // thisProject.DTE.ExecuteCommand("Project.UnloadProject");
             // Reload project
-            // thisProject.DTE.ExecuteCommand("Project.ReloadProject");
+            thisProject.DTE.ExecuteCommand("Project.ReloadProject");
             Close();
         }
 
@@ -361,6 +366,57 @@ namespace CppAutoFilter
     }
 }
 
+
+/*
+// 2. Scan selected folder for files
+// SearchOption soption = fi.ScanSubfolder ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+foreach (var file in Directory
+    .EnumerateFiles(fi.FolderPath, "*", soption)
+    .Where(file => ExtSearchPattern(file, fi.Extensions)))
+{
+    // Add path to filter session and proj session
+    string filterSubName = Path.GetDirectoryName(file).Replace(fi.FolderPath, fi.Name);
+    string ext = GetExtension(file);
+    string relFile = Utils.GetRelativePath(file, Path.GetDirectoryName(projectFullPath));
+    if (Consts.IncludeExt.Contains(ext))
+    {
+        //<ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+        //  <Filter>provaf\ev</Filter>
+        //</ClInclude>
+        includeElem.Add(new XElement(Consts.SN + "ClInclude",
+            new XAttribute("Include", relFile),
+            new XElement(Consts.SN + "Filter", filterSubName)));
+        // Proj Session
+        // <ClInclude Include="src\ev\xp\ev_EditBinding.h" />
+        projIncludeElem.Add(new XElement(Consts.SN + "ClInclude",
+            new XAttribute("Include", relFile)));
+    }
+    else if (Consts.SourceExt.Contains(ext))
+    {
+        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp">
+        //     <Filter>provaf\ev</Filter>
+        // </ClCompile>
+        compileElem.Add(new XElement(Consts.SN + "ClCompile",
+            new XAttribute("Include", relFile),
+            new XElement(Consts.SN + "Filter", filterSubName)));
+        // <ClCompile Include="src\ev\xp\ev_EditBinding.cpp" />
+        projCompileElem.Add(new XElement(Consts.SN + "ClCompile",
+            new XAttribute("Include", relFile)));
+    }
+    else
+    {
+        //<None Include="src\util\win\ut_Win32Resources.rc2">
+        //  <Filter>provaf\utils</Filter>
+        //</None>
+        otherElem.Add(new XElement(Consts.SN + "None",
+            new XAttribute("Include", relFile),
+            new XElement(Consts.SN + "Filter", filterSubName)));
+        // <None Include="src\util\win\ut_Win32Resources.rc2" />
+        projOtherElem.Add(new XElement(Consts.SN + "None",
+            new XAttribute("Include", relFile)));
+    }
+}
+*/
 
 /*
  * <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">

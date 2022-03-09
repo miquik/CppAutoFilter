@@ -13,12 +13,12 @@ namespace CppAutoFilter.ViewModels
         private string _filterName;
         private string _fullPath;
         private string _extensions;
-        private bool _scanSubfolder;
+        private bool _createFolderTree;
 
         public FilterItemVM()
         {
             Extensions = Consts.FilterAllFiles;
-            ScanSubfolder = true;
+            CreateFolderTree = true;
         }
 
         public string Name
@@ -50,12 +50,12 @@ namespace CppAutoFilter.ViewModels
             }
         }
 
-        public bool ScanSubfolder
+        public bool CreateFolderTree
         {
-            get => _scanSubfolder;
+            get => _createFolderTree;
             set
             {
-                _scanSubfolder = value;
+                _createFolderTree = value;
                 NotifyPropertyChanged();
             }
         }
@@ -68,7 +68,7 @@ namespace CppAutoFilter.ViewModels
                     new XAttribute("Name", Name),
                     new XAttribute("FolderPath", FolderPath),
                     new XAttribute("Extensions", Extensions),
-                    new XAttribute("ScanSubfolder", ScanSubfolder)
+                    new XAttribute("CreateFolderTree", CreateFolderTree)
                     );
             // new XAttribute("Guid", Guid));
         }
@@ -82,7 +82,7 @@ namespace CppAutoFilter.ViewModels
             var fName = elem.Attribute("Name");
             var fPath = elem.Attribute("FolderPath");
             var fExt = elem.Attribute("Extensions");
-            var fSSF = elem.Attribute("ScanSubfolder");
+            var fSSF = elem.Attribute("CreateFolderTree");
             // var fGd = elem.Attribute("Guid");
             if (fName == null || String.IsNullOrEmpty(fName.Value) || fPath == null)
             {
@@ -96,7 +96,7 @@ namespace CppAutoFilter.ViewModels
             filterItemVM.Name = fName.Value;
             filterItemVM.FolderPath = fPath.Value;
             filterItemVM.Extensions = fExtension;
-            filterItemVM.ScanSubfolder = (fSSF != null && String.IsNullOrEmpty(fSSF.Value) == false) ? Convert.ToBoolean(fSSF.Value) : true;
+            filterItemVM.CreateFolderTree = (fSSF != null && String.IsNullOrEmpty(fSSF.Value) == false) ? Convert.ToBoolean(fSSF.Value) : true;
             // filterItemVM.Guid = fGuid;
             return filterItemVM;
         }

@@ -45,7 +45,7 @@ namespace CppAutoFilter
                 NotifyPropertyChanged();
             }
         }
-        private string ExtensionsTemp
+        public string ExtensionsTemp
         {
             get => _extensionsTemp;
             set
@@ -83,6 +83,10 @@ namespace CppAutoFilter
             DialogResult = true;
             if (rbCustom.IsChecked == true)
             {
+                if (!ExtensionsTemp.EndsWith(";"))
+                {
+                    ExtensionsTemp += ";";
+                }
                 FilterItem.Extensions = ExtensionsTemp;
             }
             Close();
